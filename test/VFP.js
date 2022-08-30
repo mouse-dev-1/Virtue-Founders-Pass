@@ -5,8 +5,6 @@ const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
 const Promise = require("bluebird");
 
-const whitelist = require("../whitelists/VFP.json");
-
 let merkleTree;
 
 let _VFP;

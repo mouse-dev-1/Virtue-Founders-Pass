@@ -17,10 +17,11 @@ import "erc721a/contracts/ERC721A.sol";
 import "./MerkleWhitelist.sol";
 
 contract VirtueFoundersPass  is ERC721A, MerkleWhitelist{
-    string public baseURI;
-    string public contractURI;
+    string public passURI = "ipfs://QmWyj1ufdbRkwgy1MiphN1ogA6Zh41EG68gUj8KDq5xUyA";
+    string public contractURI = "ipfs://QmTbVy4g7rRwRSXLQpwQgbCMefr68GTKXCWquqnpAheZBo";
 
     uint256 maxSupply = 500;
+    
     constructor() ERC721A("Virtue Founders Pass", "VFP") {}
 
     function mintWhitelist(bytes32[] memory proof) public onlyWhitelisted(proof){
@@ -34,9 +35,9 @@ contract VirtueFoundersPass  is ERC721A, MerkleWhitelist{
         _mint(msg.sender, _quantity);
     }
 
-    function setURIs(string memory _contractURI, string memory _baseURI) public onlyOwner{
+    function setURIs(string memory _contractURI, string memory _passURI) public onlyOwner{
         contractURI = _contractURI;
-        baseURI = _baseURI;
+        passURI = _passURI;
     }
 
     function tokenURI(uint256 _tokenId)
@@ -45,6 +46,7 @@ contract VirtueFoundersPass  is ERC721A, MerkleWhitelist{
         override
         returns (string memory)
     {
-        return string(abi.encodePacked(baseURI, Strings.toString(_tokenId)));
+        require(_exists(_tokenId), "Token does not exist!");
+        return passURI;
     }
 }
