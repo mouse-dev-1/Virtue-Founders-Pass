@@ -18,7 +18,7 @@ import "./MerkleWhitelist.sol";
 
 contract VirtueFoundersPass  is ERC721A, MerkleWhitelist{
     string public baseURI;
-    string public collectionURI;
+    string public contractURI;
 
     uint256 maxSupply = 500;
     constructor() ERC721A("Virtue Founders Pass", "VFP") {}
@@ -34,8 +34,8 @@ contract VirtueFoundersPass  is ERC721A, MerkleWhitelist{
         _mint(msg.sender, _quantity);
     }
 
-    function setURIs(string memory _collectionURI, string memory _baseURI) public onlyOwner{
-        collectionURI = _collectionURI;
+    function setURIs(string memory _contractURI, string memory _baseURI) public onlyOwner{
+        contractURI = _contractURI;
         baseURI = _baseURI;
     }
 
