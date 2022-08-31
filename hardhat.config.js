@@ -24,10 +24,15 @@ module.exports = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: [process.env.RINKEBY_PRIVATE_KEY],
     },
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`,
+      accounts: [process.env.MAINNET_PRIVATE_KEY],
+    },
   },
   etherscan: {
     apiKey: {
       rinkeby: process.env.ETHERSCAN_API_KEY,
+      mainnet: process.env.ETHERSCAN_API_KEY
     },
   },
   mocha: {
