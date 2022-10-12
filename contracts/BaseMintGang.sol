@@ -27,11 +27,8 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
     uint256 whitelistStartTime;
     bool whitelistActive;
 
-    
     uint256 publicStartTime;
     bool publicActive;
-    
-    
 
     struct TokenStakeDetails{
         uint128 currentStakeTimestamp;
@@ -82,8 +79,6 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         }
     }
 
-
-
     /*
   _____ _   _ _______ ______ _____  _   _          _        ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
  |_   _| \ | |__   __|  ____|  __ \| \ | |   /\   | |      |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
@@ -110,7 +105,6 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         );
     }
 
-    
     function _beforeTokenTransfers(
         address from,
         address,
@@ -194,7 +188,6 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         _mint(msg.sender, _quantity);
     }
 
-    
     /*
    U  ___ u              _   _   U _____ u   ____          _____    _   _   _   _      ____   _____             U  ___ u  _   _    ____     
     \/"_ \/__        __ | \ |"|  \| ___"|/U |  _"\ u      |" ___|U |"|u| | | \ |"|  U /"___| |_ " _|     ___     \/"_ \/ | \ |"|  / __"| u  
@@ -253,6 +246,24 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         contractURI = _contractURI;
         baseURI = _baseURI;
     }
+    
+    function withdrawFunds() public onlyOwner {
+        uint256 funds = address(this).balance;
+
+        (bool succ, ) = payable(msg.sender).call{value: funds}("");
+        require(succ, "transfer failed");
+    }
+
+    /*
+  _____  ______          _____    ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
+ |  __ \|  ____|   /\   |  __ \  |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
+ | |__) | |__     /  \  | |  | | | |__  | |  | |  \| | |       | |    | || |  | |  \| | (___  
+ |  _  /|  __|   / /\ \ | |  | | |  __| | |  | | . ` | |       | |    | || |  | | . ` |\___ \ 
+ | | \ \| |____ / ____ \| |__| | | |    | |__| | |\  | |____   | |   _| || |__| | |\  |____) |
+ |_|  \_\______/_/    \_\_____/  |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/ 
+*/
+
+
 
     function tokenURI(uint256 _tokenId)
         public
@@ -271,20 +282,17 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         }
     }
 
-    
-    /*
-  _____  ______          _____    ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
- |  __ \|  ____|   /\   |  __ \  |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
- | |__) | |__     /  \  | |  | | | |__  | |  | |  \| | |       | |    | || |  | |  \| | (___  
- |  _  /|  __|   / /\ \ | |  | | |  __| | |  | | . ` | |       | |    | || |  | | . ` |\___ \ 
- | | \ \| |____ / ____ \| |__| | | |    | |__| | |\  | |____   | |   _| || |__| | |\  |____) |
- |_|  \_\______/_/    \_\_____/  |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/ 
-*/
+    function getAggregateTimeStaked(uint256 _tokenId) public view returns(uint128) {
+        uint128 _totalStakeTimeAccrued = tokenStakeDetails[_tokenId].totalStakeTimeAccrued;
+        uint128 _currentStakeTimestamp = tokenStakeDetails[_tokenId].currentStakeTimestamp;
 
-    function withdrawFunds() public onlyOwner {
-        uint256 funds = address(this).balance;
+        if(_currentStakeTimestamp == 0) return _totalStakeTimeAccrued;
 
-        (bool succ, ) = payable(msg.sender).call{value: funds}("");
-        require(succ, "transfer failed");
+        return _totalStakeTimeAccrued + (uint128(block.timestamp) - _currentStakeTimestamp);
+
+    }
+
+    function isStaked(uint256 _tokenId) public view returns(bool){
+       return tokenStakeDetails[_tokenId].currentStakeTimestamp == 0 ? false : true;
     }
 }
