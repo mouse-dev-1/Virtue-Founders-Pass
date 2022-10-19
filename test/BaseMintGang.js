@@ -19,7 +19,7 @@ before(async function () {
   owner = minters[0];
 
   //Whitelist
-  whitelistMinters = minters.slice(0, 500);
+  whitelistMinters = minters.slice(0, 250);
   whitelistTree = generateMerkleTree(
     whitelistMinters.map((a) => a.address),
     "whitelist"
@@ -60,9 +60,9 @@ describe("Tests", async function () {
     await setCurrentBlockTime(firstSaleStartTime);
     await Promise.map(whitelistMinters, async (whitelistMinter, index) => {
       return BaseMintGang.connect(whitelistMinter).mintWhitelist(
-        4,
+        8,
         whitelistTree.proofs[index],
-        sendEth("0.1876")
+        sendEth("0.5628")
       );
     });
 
@@ -80,7 +80,7 @@ describe("Tests", async function () {
     });
 
     expect(await BaseMintGang.totalSupply()).to.equal(
-      whitelistMinters.length * 4 + allowlistMinters.length * 8
+      whitelistMinters.length * 8 + allowlistMinters.length * 8
     );
   });
 
@@ -94,7 +94,7 @@ describe("Tests", async function () {
     });
 
     expect(await BaseMintGang.totalSupply()).to.equal(
-      whitelistMinters.length * 4 +
+      whitelistMinters.length * 8 +
         allowlistMinters.length * 8 +
         publicMinters.length * 4
     );
@@ -106,7 +106,7 @@ describe("Tests", async function () {
     );
 
     expect(await BaseMintGang.totalSupply()).to.equal(
-      whitelistMinters.length * 4 +
+      whitelistMinters.length * 8 +
         allowlistMinters.length * 8 +
         publicMinters.length * 4 +
         virtueHolders.length * 1

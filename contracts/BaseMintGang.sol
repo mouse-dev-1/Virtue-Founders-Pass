@@ -280,6 +280,20 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
         require(succ, "transfer failed");
     }
 
+    function adjustPrice(uint256 _price) public onlyOwner {
+        mintPrice = _price;
+    }
+
+    function adjustSupplyForSale(uint256 _supplyForSale) public onlyOwner {
+        require(_supplyForSale <= maxSupply);
+        supplyForSale = _supplyForSale;
+    }
+
+    function adjustMaxSupply(uint256 _maxSupply) public onlyOwner {
+        require(_maxSupply <= 4888);
+        maxSupply = _maxSupply;
+    }
+
     /*
   _____  ______          _____    ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
  |  __ \|  ____|   /\   |  __ \  |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
