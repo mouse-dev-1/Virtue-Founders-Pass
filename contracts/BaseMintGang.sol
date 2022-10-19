@@ -8,12 +8,12 @@ written by: mousedev.eth
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "erc721a/contracts/ERC721A.sol";
-import "./MerkleWhitelist.sol";
+import "./MultiMerkleWhitelist.sol";
 
-contract BaseMintGang is ERC721A, MerkleWhitelist {
-    uint256 maxSupply = 6900;
-    uint256 supplyForSale = 6400;
-    uint256 mintPrice = 0.1 ether;
+contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
+    uint256 public maxSupply = 4888;
+    uint256 public supplyForSale = 4288;
+    uint256 public mintPrice = 0.0469 ether;
 
     string public contractURI;
     string public unrevealedURI;
@@ -21,22 +21,21 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
 
     bool public revealed;
 
-    uint256 internal shiftAmount;
-    uint256 internal commitBlock;
+    uint256 public whitelistStartTime = 1666710000;
+    bool public whitelistActive = true;
 
-    uint256 whitelistStartTime;
-    bool whitelistActive;
+    uint256 public allowlistStartTime = 1666713600;
+    bool public allowlistActive = true;
 
-    uint256 publicStartTime;
-    bool publicActive;
+    uint256 public publicStartTime = 1666800000;
+    bool public publicActive = true;
 
-    struct TokenStakeDetails{
+    struct TokenStakeDetails {
         uint128 currentStakeTimestamp;
         uint128 totalStakeTimeAccrued;
     }
 
     mapping(uint256 => TokenStakeDetails) public tokenStakeDetails;
-
 
     constructor() ERC721A("BaseMint Gang", "BMG") {}
 
@@ -45,13 +44,21 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
     */
 
     function stake(uint256[] memory _tokenIds) public {
-        for(uint256 i =0;i<_tokenIds.length;i++){
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
             uint256 _tokenId = _tokenIds[i];
 
-            TokenStakeDetails memory _tokenStakeDetails = tokenStakeDetails[_tokenId];
+            TokenStakeDetails memory _tokenStakeDetails = tokenStakeDetails[
+                _tokenId
+            ];
 
-            require(msg.sender == ownerOf(_tokenId), "You do not own this token!");
-            require(_tokenStakeDetails.currentStakeTimestamp == 0, "This token is already staked!");
+            require(
+                msg.sender == ownerOf(_tokenId),
+                "You do not own this token!"
+            );
+            require(
+                _tokenStakeDetails.currentStakeTimestamp == 0,
+                "This token is already staked!"
+            );
 
             tokenStakeDetails[_tokenId] = TokenStakeDetails(
                 uint128(block.timestamp),
@@ -61,16 +68,26 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
     }
 
     function unstake(uint256[] memory _tokenIds) public {
-        for(uint256 i =0;i<_tokenIds.length;i++){
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
             uint256 _tokenId = _tokenIds[i];
 
-            TokenStakeDetails memory _tokenStakeDetails = tokenStakeDetails[_tokenId];
+            TokenStakeDetails memory _tokenStakeDetails = tokenStakeDetails[
+                _tokenId
+            ];
 
-            require(msg.sender == ownerOf(_tokenId), "You do not own this token!");
-            require(_tokenStakeDetails.currentStakeTimestamp > 0, "This token is not staked!");
+            require(
+                msg.sender == ownerOf(_tokenId),
+                "You do not own this token!"
+            );
+            require(
+                _tokenStakeDetails.currentStakeTimestamp > 0,
+                "This token is not staked!"
+            );
 
-            uint128 secondsAccrued = uint128(block.timestamp) - _tokenStakeDetails.currentStakeTimestamp;
-            uint128 totalSecondsAccrued = _tokenStakeDetails.totalStakeTimeAccrued + secondsAccrued;
+            uint128 secondsAccrued = uint128(block.timestamp) -
+                _tokenStakeDetails.currentStakeTimestamp;
+            uint128 totalSecondsAccrued = _tokenStakeDetails
+                .totalStakeTimeAccrued + secondsAccrued;
 
             tokenStakeDetails[_tokenId] = TokenStakeDetails(
                 0,
@@ -87,7 +104,6 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
   _| |_| |\  |  | |  | |____| | \ \| |\  |/ ____ \| |____  | |    | |__| | |\  | |____   | |   _| || |__| | |\  |____) |
  |_____|_| \_|  |_|  |______|_|  \_\_| \_/_/    \_\______| |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/ 
  */
-
 
     function _getAuxIndex(uint8 _index) internal view returns (uint8) {
         return uint8(_getAux(msg.sender) >> (_index * 8));
@@ -110,16 +126,15 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         address,
         uint256,
         uint256 _startingTokenId
-    ) internal virtual override{
+    ) internal virtual override {
         //This means its being minted.
-        if(from == address(0)) return;
+        if (from == address(0)) return;
 
         require(
             tokenStakeDetails[_startingTokenId].currentStakeTimestamp == 0,
             "Token Not Currently Transferrable"
         );
     }
-
 
     /*
  _  _  __  __ _  ____    ____  _  _  __ _   ___  ____  __  __   __ _  ____ 
@@ -128,18 +143,16 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
 \_)(_/(__)\_)__) (__)   (__)  \____/\_)__) \___) (__) (__)\__/ \_)__)(____/
 */
 
-    function mintWhitelist(uint8 _quantity, bytes32[] memory _proof)
+    function mintWhitelist(uint8 _quantity, bytes32[] calldata _proof)
         public
         payable
-        onlyWhitelisted(_proof)
+        onlyWhitelisted(_proof, 0)
     {
         //Require supply isn't over minted.
         require(
             totalSupply() + _quantity <= supplyForSale,
             "Max supply reached!"
         );
-        //Require they aren't minting too many.
-        require(_quantity > 0 && _quantity < 3, "Can only mint up to 2!");
         //Require they send enough ether.
         require(msg.value >= _quantity * mintPrice, "Must send enough ether!");
         //Require whitelist sale is live
@@ -147,14 +160,52 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
             block.timestamp >= whitelistStartTime && whitelistActive,
             "Whitelist sale isn't active!"
         );
+
+        uint8 mintedAmount = _getAuxIndex(0);
+
+
         //Require this quantity doesn't take them over their alloc.
         require(
-            _getAuxIndex(0) + _quantity <= 2,
+            mintedAmount + _quantity <= 8,
             "You've minted your allocation!"
         );
 
         //Store they minted this many.
-        _setAuxIndex(0, _getAuxIndex(0) + _quantity);
+        _setAuxIndex(0, mintedAmount + _quantity);
+
+        //Mint them their tokens.
+        _mint(msg.sender, _quantity);
+    }
+
+    function mintAllowlist(uint8 _quantity, bytes32[] calldata _proof)
+        public
+        payable
+        onlyWhitelisted(_proof, 1)
+    {
+        //Require supply isn't over minted.
+        require(
+            totalSupply() + _quantity <= supplyForSale,
+            "Max supply reached!"
+        );
+        //Require they send enough ether.
+        require(msg.value >= _quantity * mintPrice, "Must send enough ether!");
+
+        //Require allowlist sale is live
+        require(
+            block.timestamp >= allowlistStartTime && allowlistActive,
+            "Allowlist sale isn't active!"
+        );
+
+        uint8 mintedAmount = _getAuxIndex(1);
+
+        //Require this quantity doesn't take them over their alloc.
+        require(
+            mintedAmount + _quantity <= 8,
+            "You've minted your allocation!"
+        );
+
+        //Store they minted this many.
+        _setAuxIndex(1, mintedAmount + _quantity);
 
         //Mint them their tokens.
         _mint(msg.sender, _quantity);
@@ -166,23 +217,14 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
             totalSupply() + _quantity <= supplyForSale,
             "Max supply reached!"
         );
-        //Require they aren't minting too many.
-        require(_quantity > 0 && _quantity < 3, "Can only mint up to 2!");
         //Require they send enough ether.
         require(msg.value >= _quantity * mintPrice, "Must send enough ether!");
-        //Require public sale is live.
+
+        //Require public sale is live
         require(
             block.timestamp >= publicStartTime && publicActive,
             "Public sale isn't active!"
         );
-        //Require this quantity doesn't take them over their alloc.
-        require(
-            _getAuxIndex(1) + _quantity <= 2,
-            "You've minted your allocation in public!"
-        );
-
-        //Store they minted this many.
-        _setAuxIndex(1, _getAuxIndex(1) + _quantity);
 
         //Mint them their tokens.
         _mint(msg.sender, _quantity);
@@ -198,7 +240,6 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
      (__)  \_)-'  '-(_/ (_")  (_/(__) (__) (__)  (__)    (__)(_/     (__)  (_")  (_/(__)(__)(__) (__)\_)-' '-(_/  (__)   (_")  (_/(__)      
 */
 
-
     function airdropForVirtuePassHolders(address[] memory _addresses)
         public
         onlyOwner
@@ -212,31 +253,16 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         }
     }
 
-
     function setContractURI(string memory _contractURI) public onlyOwner {
         contractURI = _contractURI;
     }
 
-    function setRevealData(string memory _unrevealedURI) public onlyOwner {
+    function setRevealData(string memory _unrevealedURI, bool _revealed)
+        public
+        onlyOwner
+    {
         unrevealedURI = _unrevealedURI;
-    }
-
-    function commit(string memory _baseURI) public onlyOwner {
-        require(
-            (commitBlock == 0 || block.number >= commitBlock + 260) &&
-                !revealed,
-            "Only allow edits if not commited yet or commit expired"
-        );
-
-        commitBlock = block.number + 5;
-        baseURI = _baseURI;
-    }
-
-    function reveal() public onlyOwner {
-        require(block.number < commitBlock + 255, "Commit block expired!");
-
-        shiftAmount = uint256(blockhash(commitBlock));
-        revealed = true;
+        revealed = _revealed;
     }
 
     function setURIs(string memory _contractURI, string memory _baseURI)
@@ -246,7 +272,7 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         contractURI = _contractURI;
         baseURI = _baseURI;
     }
-    
+
     function withdrawFunds() public onlyOwner {
         uint256 funds = address(this).balance;
 
@@ -263,8 +289,6 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
  |_|  \_\______/_/    \_\_____/  |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/ 
 */
 
-
-
     function tokenURI(uint256 _tokenId)
         public
         view
@@ -272,27 +296,34 @@ contract BaseMintGang is ERC721A, MerkleWhitelist {
         returns (string memory)
     {
         if (revealed) {
-            uint256 _newTokenId = (_tokenId + shiftAmount) % totalSupply();
             return
-                string(
-                    abi.encodePacked(baseURI, Strings.toString(_newTokenId))
-                );
+                string(abi.encodePacked(baseURI, Strings.toString(_tokenId)));
         } else {
             return unrevealedURI;
         }
     }
 
-    function getAggregateTimeStaked(uint256 _tokenId) public view returns(uint128) {
-        uint128 _totalStakeTimeAccrued = tokenStakeDetails[_tokenId].totalStakeTimeAccrued;
-        uint128 _currentStakeTimestamp = tokenStakeDetails[_tokenId].currentStakeTimestamp;
+    function getAggregateTimeStaked(uint256 _tokenId)
+        public
+        view
+        returns (uint128)
+    {
+        uint128 _totalStakeTimeAccrued = tokenStakeDetails[_tokenId]
+            .totalStakeTimeAccrued;
+        uint128 _currentStakeTimestamp = tokenStakeDetails[_tokenId]
+            .currentStakeTimestamp;
 
-        if(_currentStakeTimestamp == 0) return _totalStakeTimeAccrued;
+        if (_currentStakeTimestamp == 0) return _totalStakeTimeAccrued;
 
-        return _totalStakeTimeAccrued + (uint128(block.timestamp) - _currentStakeTimestamp);
-
+        return
+            _totalStakeTimeAccrued +
+            (uint128(block.timestamp) - _currentStakeTimestamp);
     }
 
-    function isStaked(uint256 _tokenId) public view returns(bool){
-       return tokenStakeDetails[_tokenId].currentStakeTimestamp == 0 ? false : true;
+    function isStaked(uint256 _tokenId) public view returns (bool) {
+        return
+            tokenStakeDetails[_tokenId].currentStakeTimestamp == 0
+                ? false
+                : true;
     }
 }
