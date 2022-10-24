@@ -11,8 +11,8 @@ import "erc721a/contracts/ERC721A.sol";
 import "./MultiMerkleWhitelist.sol";
 
 contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
-    uint256 public maxSupply = 4888;
-    uint256 public supplyForSale = 4288;
+    uint256 public maxSupply = 5000;
+    uint256 public supplyForSale = 4400;
     uint256 public mintPrice = 0.0469 ether;
 
     string public contractURI;
@@ -21,18 +21,23 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
 
     bool public revealed;
 
-    uint256 public whitelistStartTime = 1666710000;
+    uint256 public whitelistStartTime = 1666789200;
     bool public whitelistActive = true;
 
-    uint256 public allowlistStartTime = 1666713600;
+    uint256 public allowlistStartTime = 1666810800;
     bool public allowlistActive = true;
 
-    uint256 public publicStartTime = 1666800000;
+    uint256 public publicStartTime = 1666875600;
     bool public publicActive = true;
 
     struct TokenStakeDetails {
         uint128 currentStakeTimestamp;
         uint128 totalStakeTimeAccrued;
+    }
+
+    struct TokenDetails {
+        uint256 tokenId;
+        TokenStakeDetails _tokenStakeDetails;
     }
 
     mapping(uint256 => TokenStakeDetails) public tokenStakeDetails;
@@ -162,7 +167,6 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
         );
 
         uint8 mintedAmount = _getAuxIndex(0);
-
 
         //Require this quantity doesn't take them over their alloc.
         require(
@@ -294,6 +298,22 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
         maxSupply = _maxSupply;
     }
 
+    function adjustSaleParams(
+        uint256 _whitelistStartTime,
+        bool _whitelistActive,
+        uint256 _allowlistStartTime,
+        bool _allowlistActive,
+        uint256 _publicStartTime,
+        bool _publicActive
+    ) public onlyOwner {
+        whitelistStartTime = _whitelistStartTime;
+        whitelistActive = _whitelistActive;
+        allowlistStartTime = _allowlistStartTime;
+        allowlistActive = _allowlistActive;
+        publicStartTime = _publicStartTime;
+        publicActive = _publicActive;
+    }
+
     /*
   _____  ______          _____    ______ _    _ _   _  _____ _______ _____ ____  _   _  _____ 
  |  __ \|  ____|   /\   |  __ \  |  ____| |  | | \ | |/ ____|__   __|_   _/ __ \| \ | |/ ____|
@@ -302,6 +322,34 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
  | | \ \| |____ / ____ \| |__| | | |    | |__| | |\  | |____   | |   _| || |__| | |\  |____) |
  |_|  \_\______/_/    \_\_____/  |_|     \____/|_| \_|\_____|  |_|  |_____\____/|_| \_|_____/ 
 */
+
+    function walletOfOwner(address _address)
+        public
+        view
+        virtual
+        returns (TokenDetails[] memory)
+    {
+        //Thanks 0xinuarashi for da inspo
+
+        uint256 _balance = balanceOf(_address);
+        TokenDetails[] memory _tokens = new TokenDetails[](_balance);
+        uint256 _addedTokens;
+        for (uint256 i = 0; i < totalSupply(); i++) {
+            if (ownerOf(i) == _address) {
+                _tokens[_addedTokens] = TokenDetails(
+                    i,
+                    TokenStakeDetails(
+                        tokenStakeDetails[i].currentStakeTimestamp,
+                        getAggregateTimeStaked(i)
+                    )
+                );
+                _addedTokens++;
+            }
+
+            if (_addedTokens == _balance) break;
+        }
+        return _tokens;
+    }
 
     function tokenURI(uint256 _tokenId)
         public
