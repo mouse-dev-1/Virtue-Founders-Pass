@@ -17,7 +17,7 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
 
     string public contractURI =
         "ipfs://QmUsso2cVFYDwun2eAHvCs4t473QDhq5jaPdwMesZAg3gC";
-    string public unrevealedURI;
+    string public unrevealedURI = "ipfs://Qmd4jTPAXnmWRmLhQXtWyJB1cm8pjMXUp2rgEH8naNYTtc";
     string public baseURI;
 
     bool public revealed;
