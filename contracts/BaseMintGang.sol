@@ -24,16 +24,13 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
 
     bool overrideAndAllowAllTransfers = false;
 
-    uint256 public whitelistStartTime = 0;
-    //uint256 public whitelistStartTime = 1666789200;
+    uint256 public whitelistStartTime = 1666789200;
     bool public whitelistActive = true;
 
-    uint256 public allowlistStartTime = 0;
-    //uint256 public allowlistStartTime = 1666810800;
+    uint256 public allowlistStartTime = 1666810800;
     bool public allowlistActive = true;
 
-    uint256 public publicStartTime = 0;
-    //uint256 public publicStartTime = 1666875600;
+    uint256 public publicStartTime = 1666875600;
     bool public publicActive = true;
 
     struct TokenStakeDetails {
@@ -271,6 +268,11 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
         }
     }
 
+    function teamMint(address _reciever, uint256 _quantity) public onlyOwner {
+        require(totalSupply() + _quantity <= maxSupply, "Max supply reached!");
+        _mint(_reciever, _quantity);
+    }
+
     function setContractURI(string memory _contractURI) public onlyOwner {
         contractURI = _contractURI;
     }
@@ -340,7 +342,6 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
     function walletOfOwner(address _address)
         public
         view
-        virtual
         returns (TokenDetails[] memory)
     {
         //Thanks 0xinuarashi for da inspo
@@ -397,9 +398,6 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
     }
 
     function isStaked(uint256 _tokenId) public view returns (bool) {
-        return
-            tokenStakeDetails[_tokenId].currentStakeTimestamp == 0
-                ? false
-                : true;
+        return tokenStakeDetails[_tokenId].currentStakeTimestamp != 0;
     }
 }
