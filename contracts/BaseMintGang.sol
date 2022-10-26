@@ -13,21 +13,27 @@ import "./MultiMerkleWhitelist.sol";
 contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
     uint256 public maxSupply = 5000;
     uint256 public supplyForSale = 4400;
-    uint256 public mintPrice = 0.0469 ether;
+    uint256 public mintPrice = 0.049 ether;
 
-    string public contractURI;
+    string public contractURI =
+        "ipfs://QmUsso2cVFYDwun2eAHvCs4t473QDhq5jaPdwMesZAg3gC";
     string public unrevealedURI;
     string public baseURI;
 
     bool public revealed;
 
-    uint256 public whitelistStartTime = 1666789200;
+    bool overrideAndAllowAllTransfers = false;
+
+    uint256 public whitelistStartTime = 0;
+    //uint256 public whitelistStartTime = 1666789200;
     bool public whitelistActive = true;
 
-    uint256 public allowlistStartTime = 1666810800;
+    uint256 public allowlistStartTime = 0;
+    //uint256 public allowlistStartTime = 1666810800;
     bool public allowlistActive = true;
 
-    uint256 public publicStartTime = 1666875600;
+    uint256 public publicStartTime = 0;
+    //uint256 public publicStartTime = 1666875600;
     bool public publicActive = true;
 
     struct TokenStakeDetails {
@@ -42,7 +48,7 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
 
     mapping(uint256 => TokenStakeDetails) public tokenStakeDetails;
 
-    constructor() ERC721A("BaseMint Gang", "BMG") {}
+    constructor() ERC721A("BaseMint Gang - Buds", "BMG") {}
 
     /*
         user funcs
@@ -134,6 +140,7 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
     ) internal virtual override {
         //This means its being minted.
         if (from == address(0)) return;
+        if (overrideAndAllowAllTransfers) return;
 
         require(
             tokenStakeDetails[_startingTokenId].currentStakeTimestamp == 0,
@@ -243,6 +250,13 @@ contract BaseMintGang is ERC721A, MultiMerkleWhitelist {
       \\  .-,_\ /\ /_,-.||   \\,-.<<   >>   //   \\_      )(\\,- (__) )(   ||   \\,-._// \\  _// \\_.-,_|___|_,-.  \\    ||   \\,-.)(  (__) 
      (__)  \_)-'  '-(_/ (_")  (_/(__) (__) (__)  (__)    (__)(_/     (__)  (_")  (_/(__)(__)(__) (__)\_)-' '-(_/  (__)   (_")  (_/(__)      
 */
+
+    function setOverrideAndAllowAllTransfers(bool _overrideAndAllowAllTransfers)
+        public
+        onlyOwner
+    {
+        overrideAndAllowAllTransfers = _overrideAndAllowAllTransfers;
+    }
 
     function airdropForVirtuePassHolders(address[] memory _addresses)
         public
